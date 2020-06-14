@@ -1,0 +1,38 @@
+{
+	"name": "df_TransformMovies",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_moviesDB",
+						"type": "DatasetReference"
+					},
+					"name": "MoviesDB",
+					"description": "Fichero origen de películas"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "sink_MoviesDB",
+						"type": "DatasetReference"
+					},
+					"name": "MovieSink"
+				}
+			],
+			"transformations": [
+				{
+					"name": "FilterYears",
+					"description": "Filtrado de años"
+				},
+				{
+					"name": "AggregateComedyRatings",
+					"description": "Agregación de ratings por año"
+				}
+			],
+			"script": "source(output(\n\t\tmovie as string,\n\t\ttitle as string,\n\t\tgenres as string,\n\t\tyear as string,\n\t\tRating as string,\n\t\t{Rotton Tomato} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> MoviesDB\nMoviesDB filter(toInteger(year) >= 1910 && toInteger(year) <= 2000 && rlike(genres, 'Comedy'),\n\tpartitionBy('roundRobin', 2)) ~> FilterYears\nFilterYears aggregate(groupBy(year),\n\tAverageComedyRating = round(avg(toInteger(Rating)),3)) ~> AggregateComedyRatings\nAggregateComedyRatings sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> MovieSink"
+		}
+	}
+}
