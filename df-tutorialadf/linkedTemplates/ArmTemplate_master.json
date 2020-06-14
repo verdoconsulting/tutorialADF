@@ -7,13 +7,13 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "df-tutorialadf"
 		},
-		"ls_ADSL_accountKey": {
-			"type": "secureString",
-			"metadata": "Secure string for 'accountKey' of 'ls_ADSL'"
-		},
 		"db_Tutoriales_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'db_Tutoriales'"
+		},
+		"ls_ADSL_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_ADSL'"
 		},
 		"ls_BLOB_ADLS_connectionString": {
 			"type": "secureString",
@@ -50,11 +50,11 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
-					"ls_ADSL_accountKey": {
-						"value": "[parameters('ls_ADSL_accountKey')]"
-					},
 					"db_Tutoriales_connectionString": {
 						"value": "[parameters('db_Tutoriales_connectionString')]"
+					},
+					"ls_ADSL_accountKey": {
+						"value": "[parameters('ls_ADSL_accountKey')]"
 					},
 					"ls_BLOB_ADLS_connectionString": {
 						"value": "[parameters('ls_BLOB_ADLS_connectionString')]"
