@@ -5,6 +5,9 @@
 			"referenceName": "ls_BLOB_ADLS",
 			"type": "LinkedServiceReference"
 		},
+		"folder": {
+			"name": "Templates"
+		},
 		"annotations": [],
 		"type": "DelimitedText",
 		"typeProperties": {
