@@ -11,6 +11,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'accountKey' of 'ls_ADSL'"
 		},
+		"db_Tutoriales_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'db_Tutoriales'"
+		},
 		"ls_ADSL_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://storagetutorialadf.dfs.core.windows.net"
@@ -44,6 +48,9 @@
 					},
 					"ls_ADSL_accountKey": {
 						"value": "[parameters('ls_ADSL_accountKey')]"
+					},
+					"db_Tutoriales_connectionString": {
+						"value": "[parameters('db_Tutoriales_connectionString')]"
 					},
 					"ls_ADSL_properties_typeProperties_url": {
 						"value": "[parameters('ls_ADSL_properties_typeProperties_url')]"
