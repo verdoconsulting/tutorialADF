@@ -15,6 +15,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'db_Tutoriales'"
 		},
+		"ls_BLOB_ADLS_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_BLOB_ADLS'"
+		},
 		"ls_ADSL_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://storagetutorialadf.dfs.core.windows.net"
@@ -51,6 +55,9 @@
 					},
 					"db_Tutoriales_connectionString": {
 						"value": "[parameters('db_Tutoriales_connectionString')]"
+					},
+					"ls_BLOB_ADLS_connectionString": {
+						"value": "[parameters('ls_BLOB_ADLS_connectionString')]"
 					},
 					"ls_ADSL_properties_typeProperties_url": {
 						"value": "[parameters('ls_ADSL_properties_typeProperties_url')]"

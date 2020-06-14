@@ -11,6 +11,9 @@
 		"db_Tutoriales_connectionString": {
 			"value": ""
 		},
+		"ls_BLOB_ADLS_connectionString": {
+			"value": ""
+		},
 		"ls_ADSL_properties_typeProperties_url": {
 			"value": "https://storagetutorialadf.dfs.core.windows.net"
 		}
