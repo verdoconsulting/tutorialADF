@@ -30,9 +30,13 @@
 				{
 					"name": "AggregateComedyRatings",
 					"description": "Agregación de ratings por año"
+				},
+				{
+					"name": "OrdenarAnos",
+					"description": "Ordenación en base al año numérico"
 				}
 			],
-			"script": "source(output(\n\t\tmovie as string,\n\t\ttitle as string,\n\t\tgenres as string,\n\t\tyear as string,\n\t\tRating as string,\n\t\t{Rotton Tomato} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> MoviesDB\nMoviesDB filter(toInteger(year) >= 1910 && toInteger(year) <= 2000 && rlike(genres, 'Comedy'),\n\tpartitionBy('roundRobin', 2)) ~> FilterYears\nFilterYears aggregate(groupBy(year),\n\tAverageComedyRating = round(avg(toInteger(Rating)),3)) ~> AggregateComedyRatings\nAggregateComedyRatings sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> MovieSink"
+			"script": "source(output(\n\t\tmovie as string,\n\t\ttitle as string,\n\t\tgenres as string,\n\t\tyear as string,\n\t\tRating as string,\n\t\t{Rotton Tomato} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> MoviesDB\nMoviesDB filter(toInteger(year) >= 1910 && toInteger(year) <= 2000 && rlike(genres, 'Comedy'),\n\tpartitionBy('roundRobin', 2)) ~> FilterYears\nFilterYears aggregate(groupBy(year),\n\tAverageComedyRating = round(avg(toInteger(Rating)),3)) ~> AggregateComedyRatings\nAggregateComedyRatings sort(asc(toInteger(year), true)) ~> OrdenarAnos\nOrdenarAnos sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['PeliculasTransformadas.csv'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> MovieSink"
 		}
 	}
 }
