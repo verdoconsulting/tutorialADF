@@ -10,6 +10,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
+				"fileName": "small_radio_json_2.json",
 				"folderPath": "json",
 				"fileSystem": "sample-data"
 			}
