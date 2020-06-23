@@ -1,0 +1,18 @@
+{
+	"name": "smRadio",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_ADSL",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "json",
+				"fileSystem": "sample-data"
+			}
+		}
+	}
+}
