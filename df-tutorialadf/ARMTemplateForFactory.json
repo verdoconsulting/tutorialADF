@@ -612,6 +612,7 @@
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobFSLocation",
+						"fileName": "moviesDB.csv",
 						"fileSystem": "sample-data"
 					},
 					"columnDelimiter": ",",
@@ -717,6 +718,25 @@
 				"type": "AzureBlobStorage",
 				"typeProperties": {
 					"connectionString": "[parameters('ls_BLOB_ADLS_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/irComputeOptimized')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "East US",
+						"dataFlowProperties": {
+							"computeType": "ComputeOptimized",
+							"coreCount": 8,
+							"timeToLive": 0
+						}
+					}
 				}
 			},
 			"dependsOn": []
@@ -1033,12 +1053,65 @@
 							"description": "Se elimina una de las columnas año"
 						}
 					],
-					"script": "source(output(\n\t\tmovie as string,\n\t\ttitle as string,\n\t\tgenres as string,\n\t\tyear as string,\n\t\tRating as string,\n\t\t{Rotton Tomato} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> MoviesDB\nMoviesDB filter(toInteger(year) >= 1910 && toInteger(year) <= 2000 && rlike(genres, 'Comedy'),\n\tpartitionBy('roundRobin', 2)) ~> FilterYears\nFilterYears aggregate(groupBy(year),\n\tAverageComedyRating = round(avg(toInteger(Rating)),3)) ~> AggregateComedyRatings\nSelColumnas sort(asc(toInteger(anno), true),\n\tcaseInsensitive: true,\n\tpartitionLevel: true) ~> OrdenarAnos\nMoviesDB select(mapColumn(\n\t\tmovie,\n\t\ttitle,\n\t\tgenres,\n\t\tyear_original = year,\n\t\tRating,\n\t\t{Rotton Tomato}\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> LeerPeliculas\nAggregateComedyRatings, LeerPeliculas join(year == year_original,\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> EnlacePeliculas\nEnlacePeliculas select(mapColumn(\n\t\tid_pelicula = movie,\n\t\ttitulo = title,\n\t\tanno = year_original,\n\t\tgenero = genres,\n\t\tRating,\n\t\tPromedioRatingAnual = AverageComedyRating,\n\t\t{Rotton Tomato}\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelColumnas\nOrdenarAnos sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['PeliculasOrdenadas.csv'],\n\tpartitionBy('hash', 1),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> MovieSink"
+					"script": "source(output(\n\t\tmovie as string,\n\t\ttitle as string,\n\t\tgenres as string,\n\t\tyear as string,\n\t\tRating as string,\n\t\t{Rotton Tomato} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> MoviesDB\nMoviesDB filter(toInteger(year) >= 1910 && toInteger(year) <= 2000 && rlike(genres, 'Comedy'),\n\tpartitionBy('hash', 1)) ~> FilterYears\nFilterYears aggregate(groupBy(year),\n\tAverageComedyRating = round(avg(toInteger(Rating)),3)) ~> AggregateComedyRatings\nSelColumnas sort(asc(toInteger(anno), true),\n\tcaseInsensitive: true,\n\tpartitionLevel: true) ~> OrdenarAnos\nMoviesDB select(mapColumn(\n\t\tmovie,\n\t\ttitle,\n\t\tgenres,\n\t\tyear_original = year,\n\t\tRating,\n\t\t{Rotton Tomato}\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> LeerPeliculas\nAggregateComedyRatings, LeerPeliculas join(year == year_original,\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> EnlacePeliculas\nEnlacePeliculas select(mapColumn(\n\t\tid_pelicula = movie,\n\t\ttitulo = title,\n\t\tanno = year_original,\n\t\tgenero = genres,\n\t\tRating,\n\t\tPromedioRatingAnual = AverageComedyRating,\n\t\t{Rotton Tomato}\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelColumnas\nOrdenarAnos sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['PeliculasOrdenadas_20200622.csv'],\n\tpartitionBy('hash', 1),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> MovieSink"
 				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/ds_moviesDB')]",
 				"[concat(variables('factoryId'), '/datasets/sink_MoviesDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/salesData')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_ADSL",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "1500000 Sales Records.csv",
+						"fileSystem": "sample-data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_ADSL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/smRadio')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_ADSL",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "small_radio_json_2.json",
+						"folderPath": "json",
+						"fileSystem": "sample-data"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_ADSL')]"
 			]
 		}
 	]

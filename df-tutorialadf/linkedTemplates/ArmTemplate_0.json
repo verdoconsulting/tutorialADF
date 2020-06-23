@@ -72,6 +72,25 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/irComputeOptimized')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "East US",
+						"dataFlowProperties": {
+							"computeType": "ComputeOptimized",
+							"coreCount": 8,
+							"timeToLive": 0
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DimEmp')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -433,6 +452,7 @@
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobFSLocation",
+						"fileName": "moviesDB.csv",
 						"fileSystem": "sample-data"
 					},
 					"columnDelimiter": ",",
@@ -494,6 +514,59 @@
 					"quoteChar": "\""
 				},
 				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_ADSL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/salesData')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_ADSL",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "1500000 Sales Records.csv",
+						"fileSystem": "sample-data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_ADSL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/smRadio')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_ADSL",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "small_radio_json_2.json",
+						"folderPath": "json",
+						"fileSystem": "sample-data"
+					}
+				},
+				"schema": {}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/ls_ADSL')]"
@@ -811,7 +884,7 @@
 							"description": "Se elimina una de las columnas año"
 						}
 					],
-					"script": "source(output(\n\t\tmovie as string,\n\t\ttitle as string,\n\t\tgenres as string,\n\t\tyear as string,\n\t\tRating as string,\n\t\t{Rotton Tomato} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> MoviesDB\nMoviesDB filter(toInteger(year) >= 1910 && toInteger(year) <= 2000 && rlike(genres, 'Comedy'),\n\tpartitionBy('roundRobin', 2)) ~> FilterYears\nFilterYears aggregate(groupBy(year),\n\tAverageComedyRating = round(avg(toInteger(Rating)),3)) ~> AggregateComedyRatings\nSelColumnas sort(asc(toInteger(anno), true),\n\tcaseInsensitive: true,\n\tpartitionLevel: true) ~> OrdenarAnos\nMoviesDB select(mapColumn(\n\t\tmovie,\n\t\ttitle,\n\t\tgenres,\n\t\tyear_original = year,\n\t\tRating,\n\t\t{Rotton Tomato}\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> LeerPeliculas\nAggregateComedyRatings, LeerPeliculas join(year == year_original,\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> EnlacePeliculas\nEnlacePeliculas select(mapColumn(\n\t\tid_pelicula = movie,\n\t\ttitulo = title,\n\t\tanno = year_original,\n\t\tgenero = genres,\n\t\tRating,\n\t\tPromedioRatingAnual = AverageComedyRating,\n\t\t{Rotton Tomato}\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelColumnas\nOrdenarAnos sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['PeliculasOrdenadas.csv'],\n\tpartitionBy('hash', 1),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> MovieSink"
+					"script": "source(output(\n\t\tmovie as string,\n\t\ttitle as string,\n\t\tgenres as string,\n\t\tyear as string,\n\t\tRating as string,\n\t\t{Rotton Tomato} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> MoviesDB\nMoviesDB filter(toInteger(year) >= 1910 && toInteger(year) <= 2000 && rlike(genres, 'Comedy'),\n\tpartitionBy('hash', 1)) ~> FilterYears\nFilterYears aggregate(groupBy(year),\n\tAverageComedyRating = round(avg(toInteger(Rating)),3)) ~> AggregateComedyRatings\nSelColumnas sort(asc(toInteger(anno), true),\n\tcaseInsensitive: true,\n\tpartitionLevel: true) ~> OrdenarAnos\nMoviesDB select(mapColumn(\n\t\tmovie,\n\t\ttitle,\n\t\tgenres,\n\t\tyear_original = year,\n\t\tRating,\n\t\t{Rotton Tomato}\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> LeerPeliculas\nAggregateComedyRatings, LeerPeliculas join(year == year_original,\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> EnlacePeliculas\nEnlacePeliculas select(mapColumn(\n\t\tid_pelicula = movie,\n\t\ttitulo = title,\n\t\tanno = year_original,\n\t\tgenero = genres,\n\t\tRating,\n\t\tPromedioRatingAnual = AverageComedyRating,\n\t\t{Rotton Tomato}\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelColumnas\nOrdenarAnos sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['PeliculasOrdenadas_20200622.csv'],\n\tpartitionBy('hash', 1),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> MovieSink"
 				}
 			},
 			"dependsOn": [
@@ -865,180 +938,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/DimEmployeeLoader2')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/GenericSCDType2')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Using byNames to fully parameterize a Slowly Change Dimension Type 2 patter",
-				"activities": [
-					{
-						"name": "GenericSCDType2",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "GenericSCDType2",
-								"type": "DataFlowReference",
-								"parameters": {
-									"PrimaryKey": {
-										"value": "'@{pipeline().parameters.PrimaryKey}'",
-										"type": "Expression"
-									},
-									"Columns": {
-										"value": "'@{pipeline().parameters.ColumnNames}'",
-										"type": "Expression"
-									}
-								},
-								"datasetParameters": {
-									"GenericInput": {
-										"Folder": {
-											"value": "@pipeline().parameters.IncomingDimensionFolder",
-											"type": "Expression"
-										}
-									},
-									"ExistingDimensionTable": {
-										"Table": {
-											"value": "@pipeline().parameters.DimensionTable",
-											"type": "Expression"
-										}
-									},
-									"DimensionTableSink": {
-										"Table": {
-											"value": "@pipeline().parameters.DimensionTable",
-											"type": "Expression"
-										}
-									}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							}
-						}
-					}
-				],
-				"parameters": {
-					"IncomingDimensionFolder": {
-						"type": "string"
-					},
-					"DimensionTable": {
-						"type": "string"
-					},
-					"PrimaryKey": {
-						"type": "string"
-					},
-					"ColumnNames": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Templates"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/GenericSCDType2')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/LoadFacts2')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Data Flow Fact Loader",
-						"description": "This is a data flow example of how to load facts into your fact table from a single sample Employee dimension. There is also an example of handling early-arriving facts.",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "DF_FactLoader",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"Facts": {},
-									"DimEmployee": {},
-									"writeFactTable": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							}
-						}
-					}
-				],
-				"folder": {
-					"name": "Templates"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/DF_FactLoader')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/TransformMovies')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "TransformarPeliculas",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "df_TransformMovies",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"MoviesDB": {},
-									"MovieSink": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							}
-						}
-					}
-				],
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/df_TransformMovies')]"
 			]
 		}
 	]
