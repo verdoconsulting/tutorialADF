@@ -7,7 +7,76 @@
 		},
 		"annotations": [],
 		"type": "AzureSqlTable",
-		"schema": [],
+		"schema": [
+			{
+				"name": "Region",
+				"type": "varchar"
+			},
+			{
+				"name": "Country",
+				"type": "varchar"
+			},
+			{
+				"name": "Item Type",
+				"type": "varchar"
+			},
+			{
+				"name": "Sales Channel",
+				"type": "varchar"
+			},
+			{
+				"name": "Order Priority",
+				"type": "varchar"
+			},
+			{
+				"name": "Order Date",
+				"type": "date"
+			},
+			{
+				"name": "Order ID",
+				"type": "varchar"
+			},
+			{
+				"name": "Ship Date",
+				"type": "date"
+			},
+			{
+				"name": "Units Sold",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "Unit Price",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "Unit Cost",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "Total Revenue",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "Total Cost",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "Total Profit",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			}
+		],
 		"typeProperties": {
 			"schema": "dbo",
 			"table": "datosVentas"
