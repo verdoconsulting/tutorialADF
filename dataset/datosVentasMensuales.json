@@ -1,0 +1,16 @@
+{
+	"name": "datosVentasMensuales",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "db_Tutoriales",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "datosVentasMes"
+		}
+	}
+}
