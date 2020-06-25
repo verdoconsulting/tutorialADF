@@ -4,6 +4,7 @@
 		"activities": [
 			{
 				"name": "df_AgregarVentasMes",
+				"description": "No he logrado hacer que los datos se ordenen al ser insertados en el Sink.",
 				"type": "ExecuteDataFlow",
 				"dependsOn": [],
 				"policy": {
