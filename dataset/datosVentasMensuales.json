@@ -7,7 +7,49 @@
 		},
 		"annotations": [],
 		"type": "AzureSqlTable",
-		"schema": [],
+		"schema": [
+			{
+				"name": "ANNOMES",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Units Sold",
+				"type": "decimal",
+				"precision": 28,
+				"scale": 2
+			},
+			{
+				"name": "Unit Price",
+				"type": "decimal",
+				"precision": 22,
+				"scale": 6
+			},
+			{
+				"name": "Unit Cost",
+				"type": "decimal",
+				"precision": 22,
+				"scale": 6
+			},
+			{
+				"name": "Total Revenue",
+				"type": "decimal",
+				"precision": 22,
+				"scale": 6
+			},
+			{
+				"name": "Total Cost",
+				"type": "decimal",
+				"precision": 22,
+				"scale": 6
+			},
+			{
+				"name": "Total Profit",
+				"type": "decimal",
+				"precision": 22,
+				"scale": 6
+			}
+		],
 		"typeProperties": {
 			"schema": "dbo",
 			"table": "datosVentasMes"
