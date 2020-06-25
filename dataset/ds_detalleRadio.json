@@ -5,6 +5,9 @@
 			"referenceName": "db_Tutoriales",
 			"type": "LinkedServiceReference"
 		},
+		"folder": {
+			"name": "Ejemplos Radio"
+		},
 		"annotations": [],
 		"type": "AzureSqlTable",
 		"schema": [],
