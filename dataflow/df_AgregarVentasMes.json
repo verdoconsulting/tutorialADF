@@ -1,6 +1,7 @@
 {
-	"name": "dataflow1",
+	"name": "df_AgregarVentasMes",
 	"properties": {
+		"description": "DF Para tomar los datos de ventas, agregarlos e insertarlos ordenados por ANNOMES que es el Order Date",
 		"type": "MappingDataFlow",
 		"typeProperties": {
 			"sources": [
