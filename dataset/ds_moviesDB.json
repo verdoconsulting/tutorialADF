@@ -5,6 +5,9 @@
 			"referenceName": "ls_ADSL",
 			"type": "LinkedServiceReference"
 		},
+		"folder": {
+			"name": "Ejemplos Películas"
+		},
 		"annotations": [],
 		"type": "DelimitedText",
 		"typeProperties": {

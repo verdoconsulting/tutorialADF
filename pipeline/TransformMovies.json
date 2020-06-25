@@ -26,6 +26,9 @@
 				}
 			}
 		],
+		"folder": {
+			"name": "Ejemplos Películas"
+		},
 		"annotations": []
 	}
 }

@@ -1,6 +1,9 @@
 {
 	"name": "df_TransformMovies",
 	"properties": {
+		"folder": {
+			"name": "Ejemplos Películas"
+		},
 		"type": "MappingDataFlow",
 		"typeProperties": {
 			"sources": [
