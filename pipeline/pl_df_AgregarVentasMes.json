@@ -1,9 +1,9 @@
 {
-	"name": "pipeline1",
+	"name": "pl_df_AgregarVentasMes",
 	"properties": {
 		"activities": [
 			{
-				"name": "dataflow1",
+				"name": "df_AgregarVentasMes",
 				"type": "ExecuteDataFlow",
 				"dependsOn": [],
 				"policy": {
@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "dataflow1",
+						"referenceName": "df_AgregarVentasMes",
 						"type": "DataFlowReference"
 					},
 					"compute": {
