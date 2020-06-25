@@ -1,0 +1,16 @@
+{
+	"name": "ds_datosRadio",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "db_Tutoriales",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "datosRadio"
+		}
+	}
+}

@@ -13,7 +13,15 @@
 					"description": "Origen JSON"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_datosRadio",
+						"type": "DatasetReference"
+					},
+					"name": "datosRadios"
+				}
+			],
 			"transformations": [
 				{
 					"name": "seleccionarColumnas",
@@ -32,10 +40,16 @@
 					"name": "subscribersByLocDatosOri"
 				},
 				{
-					"name": "Join2"
+					"name": "countOfSubTypeByGenderDatosOri"
+				},
+				{
+					"name": "LimpiarColumnas"
+				},
+				{
+					"name": "columnasAdicionales"
 				}
 			],
-			"script": "source(output(\n\t\tts as string,\n\t\tuserId as string,\n\t\tsessionId as string,\n\t\tpage as string,\n\t\tauth as string,\n\t\tmethod as string,\n\t\tstatus as string,\n\t\tlevel as string,\n\t\titemInSession as string,\n\t\tlocation as string,\n\t\tlastName as string,\n\t\tfirstName as string,\n\t\tregistration as string,\n\t\tgender as string,\n\t\tartist as string,\n\t\tsong as string,\n\t\tlength as double\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> smallRadio\nsmallRadio select(mapColumn(\n\t\ttime_stamp = ts,\n\t\tpage,\n\t\tmethod,\n\t\tstatus,\n\t\tlevel_type = level,\n\t\tlocation,\n\t\tlastName,\n\t\tfirstName,\n\t\tregistration,\n\t\tgender\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> seleccionarColumnas\nseleccionarColumnas aggregate(groupBy(location),\n\tSubscribersByLocation = count(),\n\t\ttime_stamp = first(time_stamp)) ~> SubscribersByLocation\nseleccionarColumnas aggregate(groupBy(gender,\n\t\tlevel_type),\n\tcountOfSubTypeByGender = count(),\n\t\ttime_stamp = first(time_stamp)) ~> countOfSubTypeByGender\nseleccionarColumnas select(mapColumn(\n\t\ttime_stamp,\n\t\tpage,\n\t\tmethod,\n\t\tstatus,\n\t\tlevel_type,\n\t\tlocation,\n\t\tlastName,\n\t\tfirstName,\n\t\tregistration,\n\t\tgender\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> datosOriginales\ndatosOriginales, SubscribersByLocation join(datosOriginales@time_stamp == SubscribersByLocation@time_stamp,\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> subscribersByLocDatosOri\nsubscribersByLocDatosOri, countOfSubTypeByGender join(datosOriginales@time_stamp == countOfSubTypeByGender@time_stamp,\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> Join2"
+			"script": "source(output(\n\t\tts as string,\n\t\tuserId as string,\n\t\tsessionId as string,\n\t\tpage as string,\n\t\tauth as string,\n\t\tmethod as string,\n\t\tstatus as string,\n\t\tlevel as string,\n\t\titemInSession as string,\n\t\tlocation as string,\n\t\tlastName as string,\n\t\tfirstName as string,\n\t\tregistration as string,\n\t\tgender as string,\n\t\tartist as string,\n\t\tsong as string,\n\t\tlength as double\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> smallRadio\nsmallRadio select(mapColumn(\n\t\ttime_stamp = ts,\n\t\tpage,\n\t\tmethod,\n\t\tstatus,\n\t\tlevel_type = level,\n\t\tlocation,\n\t\tlastName,\n\t\tfirstName,\n\t\tregistration,\n\t\tgender\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> seleccionarColumnas\nseleccionarColumnas aggregate(groupBy(location),\n\tSubscribersByLocation = count(),\n\t\ttime_stamp = first(time_stamp)) ~> SubscribersByLocation\nseleccionarColumnas aggregate(groupBy(gender,\n\t\tlevel_type),\n\tcountOfSubTypeByGender = count(),\n\t\ttime_stamp = first(time_stamp)) ~> countOfSubTypeByGender\nseleccionarColumnas select(mapColumn(\n\t\ttime_stamp,\n\t\tpage,\n\t\tmethod,\n\t\tstatus,\n\t\tlevel_type,\n\t\tlocation,\n\t\tlastName,\n\t\tfirstName,\n\t\tregistration,\n\t\tgender\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> datosOriginales\ndatosOriginales, SubscribersByLocation join(datosOriginales@time_stamp == SubscribersByLocation@time_stamp,\n\tjoinType:'left',\n\tbroadcast: 'auto')~> subscribersByLocDatosOri\nsubscribersByLocDatosOri, countOfSubTypeByGender join(datosOriginales@time_stamp == countOfSubTypeByGender@time_stamp,\n\tjoinType:'left',\n\tbroadcast: 'auto')~> countOfSubTypeByGenderDatosOri\ncountOfSubTypeByGenderDatosOri select(mapColumn(\n\t\ttime_stamp = datosOriginales@time_stamp,\n\t\tstatus,\n\t\tlevel_type = datosOriginales@level_type,\n\t\tlocation = datosOriginales@location,\n\t\tlastName,\n\t\tfirstName,\n\t\tregistration,\n\t\tgender = datosOriginales@gender,\n\t\tlocation = SubscribersByLocation@location,\n\t\tSubscribersByLocation,\n\t\ttime_stamp = SubscribersByLocation@time_stamp,\n\t\tgender = countOfSubTypeByGender@gender,\n\t\tlevel_type = countOfSubTypeByGender@level_type,\n\t\tcountOfSubTypeByGender,\n\t\ttime_stamp = countOfSubTypeByGender@time_stamp\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> LimpiarColumnas\nLimpiarColumnas derive(nombre_completo = firstName + ' ' + lastName,\n\t\testado = split(location, ',')[2]) ~> columnasAdicionales\ncolumnasAdicionales sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\trecreate:true,\n\tformat: 'table',\n\tmapColumn(\n\t\ttime_stamp,\n\t\tnombre_completo,\n\t\tstatus,\n\t\tlevel_type,\n\t\tlocation,\n\t\tregistration,\n\t\tgender,\n\t\testado,\n\t\tSubscribersByLocation,\n\t\tcountOfSubTypeByGender\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> datosRadios"
 		}
 	}
 }
