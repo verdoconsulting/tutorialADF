@@ -14,8 +14,28 @@
 				}
 			],
 			"sinks": [],
-			"transformations": [],
-			"script": "source(output(\n\t\tts as string,\n\t\tuserId as string,\n\t\tsessionId as string,\n\t\tpage as string,\n\t\tauth as string,\n\t\tmethod as string,\n\t\tstatus as string,\n\t\tlevel as string,\n\t\titemInSession as string,\n\t\tlocation as string,\n\t\tlastName as string,\n\t\tfirstName as string,\n\t\tregistration as string,\n\t\tgender as string,\n\t\tartist as string,\n\t\tsong as string,\n\t\tlength as double\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> smallRadio"
+			"transformations": [
+				{
+					"name": "seleccionarColumnas",
+					"description": "Selección de algunas columnas solamente"
+				},
+				{
+					"name": "SubscribersByLocation"
+				},
+				{
+					"name": "countOfSubTypeByGender"
+				},
+				{
+					"name": "datosOriginales"
+				},
+				{
+					"name": "subscribersByLocDatosOri"
+				},
+				{
+					"name": "Join2"
+				}
+			],
+			"script": "source(output(\n\t\tts as string,\n\t\tuserId as string,\n\t\tsessionId as string,\n\t\tpage as string,\n\t\tauth as string,\n\t\tmethod as string,\n\t\tstatus as string,\n\t\tlevel as string,\n\t\titemInSession as string,\n\t\tlocation as string,\n\t\tlastName as string,\n\t\tfirstName as string,\n\t\tregistration as string,\n\t\tgender as string,\n\t\tartist as string,\n\t\tsong as string,\n\t\tlength as double\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> smallRadio\nsmallRadio select(mapColumn(\n\t\ttime_stamp = ts,\n\t\tpage,\n\t\tmethod,\n\t\tstatus,\n\t\tlevel_type = level,\n\t\tlocation,\n\t\tlastName,\n\t\tfirstName,\n\t\tregistration,\n\t\tgender\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> seleccionarColumnas\nseleccionarColumnas aggregate(groupBy(location),\n\tSubscribersByLocation = count(),\n\t\ttime_stamp = first(time_stamp)) ~> SubscribersByLocation\nseleccionarColumnas aggregate(groupBy(gender,\n\t\tlevel_type),\n\tcountOfSubTypeByGender = count(),\n\t\ttime_stamp = first(time_stamp)) ~> countOfSubTypeByGender\nseleccionarColumnas select(mapColumn(\n\t\ttime_stamp,\n\t\tpage,\n\t\tmethod,\n\t\tstatus,\n\t\tlevel_type,\n\t\tlocation,\n\t\tlastName,\n\t\tfirstName,\n\t\tregistration,\n\t\tgender\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> datosOriginales\ndatosOriginales, SubscribersByLocation join(datosOriginales@time_stamp == SubscribersByLocation@time_stamp,\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> subscribersByLocDatosOri\nsubscribersByLocDatosOri, countOfSubTypeByGender join(datosOriginales@time_stamp == countOfSubTypeByGender@time_stamp,\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> Join2"
 		}
 	}
 }
