@@ -1,6 +1,9 @@
 {
 	"name": "df_smallRadio",
 	"properties": {
+		"folder": {
+			"name": "Ejemplos Radio"
+		},
 		"type": "MappingDataFlow",
 		"typeProperties": {
 			"sources": [
