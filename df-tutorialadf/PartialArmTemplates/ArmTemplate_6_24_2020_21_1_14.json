@@ -1,0 +1,716 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "df-tutorialadf"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/DatosVentas')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink"
+							},
+							"enableStaging": false,
+							"parallelCopies": 20,
+							"dataIntegrationUnits": 4,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"name": "Region",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Region",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "Country",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Country",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "Item Type",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Item Type",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "Sales Channel",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Sales Channel",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "Order Priority",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Order Priority",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "Order Date",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Order Date",
+											"type": "DateTime",
+											"physicalType": "date"
+										}
+									},
+									{
+										"source": {
+											"name": "Order ID",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Order ID",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "Ship Date",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Ship Date",
+											"type": "DateTime",
+											"physicalType": "date"
+										}
+									},
+									{
+										"source": {
+											"name": "Units Sold",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Units Sold",
+											"type": "Decimal",
+											"physicalType": "decimal"
+										}
+									},
+									{
+										"source": {
+											"name": "Unit Price",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Unit Price",
+											"type": "Decimal",
+											"physicalType": "decimal"
+										}
+									},
+									{
+										"source": {
+											"name": "Unit Cost",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Unit Cost",
+											"type": "Decimal",
+											"physicalType": "decimal"
+										}
+									},
+									{
+										"source": {
+											"name": "Total Revenue",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Total Revenue",
+											"type": "Decimal",
+											"physicalType": "decimal"
+										}
+									},
+									{
+										"source": {
+											"name": "Total Cost",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Total Cost",
+											"type": "Decimal",
+											"physicalType": "decimal"
+										}
+									},
+									{
+										"source": {
+											"name": "Total Profit",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Total Profit",
+											"type": "Decimal",
+											"physicalType": "decimal"
+										}
+									}
+								],
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "salesData",
+								"type": "DatasetReference"
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "datosVentas",
+								"type": "DatasetReference"
+							}
+						]
+					}
+				],
+				"folder": {
+					"name": "Ejemplos Ventas"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/salesData')]",
+				"[concat(variables('factoryId'), '/datasets/datosVentas')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TransformMovies')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "TransformarPeliculas",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_TransformMovies",
+								"type": "DataFlowReference"
+							},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					}
+				],
+				"folder": {
+					"name": "Ejemplos Películas"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/df_TransformMovies')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_df_AgregarVentasMes')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "df_AgregarVentasMes",
+						"description": "No he logrado hacer que los datos se ordenen al ser insertados en el Sink.",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_AgregarVentasMes",
+								"type": "DataFlowReference"
+							},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					}
+				],
+				"folder": {
+					"name": "Ejemplos Ventas"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/df_AgregarVentasMes')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/datosVentas')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "db_Tutoriales",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Ejemplos Ventas"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Region",
+						"type": "varchar"
+					},
+					{
+						"name": "Country",
+						"type": "varchar"
+					},
+					{
+						"name": "Item Type",
+						"type": "varchar"
+					},
+					{
+						"name": "Sales Channel",
+						"type": "varchar"
+					},
+					{
+						"name": "Order Priority",
+						"type": "varchar"
+					},
+					{
+						"name": "Order Date",
+						"type": "date"
+					},
+					{
+						"name": "Order ID",
+						"type": "varchar"
+					},
+					{
+						"name": "Ship Date",
+						"type": "date"
+					},
+					{
+						"name": "Units Sold",
+						"type": "decimal",
+						"precision": 18,
+						"scale": 2
+					},
+					{
+						"name": "Unit Price",
+						"type": "decimal",
+						"precision": 18,
+						"scale": 2
+					},
+					{
+						"name": "Unit Cost",
+						"type": "decimal",
+						"precision": 18,
+						"scale": 2
+					},
+					{
+						"name": "Total Revenue",
+						"type": "decimal",
+						"precision": 18,
+						"scale": 2
+					},
+					{
+						"name": "Total Cost",
+						"type": "decimal",
+						"precision": 18,
+						"scale": 2
+					},
+					{
+						"name": "Total Profit",
+						"type": "decimal",
+						"precision": 18,
+						"scale": 2
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "datosVentas"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/datosVentasMensuales')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "db_Tutoriales",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Ejemplos Ventas"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "ANNOMES",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Units Sold",
+						"type": "decimal",
+						"precision": 28,
+						"scale": 2
+					},
+					{
+						"name": "Unit Price",
+						"type": "decimal",
+						"precision": 22,
+						"scale": 6
+					},
+					{
+						"name": "Unit Cost",
+						"type": "decimal",
+						"precision": 22,
+						"scale": 6
+					},
+					{
+						"name": "Total Revenue",
+						"type": "decimal",
+						"precision": 22,
+						"scale": 6
+					},
+					{
+						"name": "Total Cost",
+						"type": "decimal",
+						"precision": 22,
+						"scale": 6
+					},
+					{
+						"name": "Total Profit",
+						"type": "decimal",
+						"precision": 22,
+						"scale": 6
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "datosVentasMes"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_moviesDB')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_ADSL",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Ejemplos Películas"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "moviesDB.csv",
+						"fileSystem": "sample-data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "movie",
+						"type": "String"
+					},
+					{
+						"name": "title",
+						"type": "String"
+					},
+					{
+						"name": "genres",
+						"type": "String"
+					},
+					{
+						"name": "year",
+						"type": "String"
+					},
+					{
+						"name": "Rating",
+						"type": "String"
+					},
+					{
+						"name": "Rotton Tomato",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/salesData')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_ADSL",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Ejemplos Ventas"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "1500000 Sales Records.csv",
+						"fileSystem": "sample-data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/sink_MoviesDB')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_ADSL",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Ejemplos Películas"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "output",
+						"fileSystem": "sample-data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_AgregarVentasMes')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "DF Para tomar los datos de ventas, agregarlos e insertarlos ordenados por ANNOMES que es el Order Date",
+				"folder": {
+					"name": "Ejemplos Ventas"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "datosVentas",
+								"type": "DatasetReference"
+							},
+							"name": "datosVentas",
+							"description": "Origen con 1,5 millones de registros de Ventas"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "datosVentasMensuales",
+								"type": "DatasetReference"
+							},
+							"name": "datosVentasMensuales",
+							"description": "Target de Ventas Mensuales por Order Date"
+						}
+					],
+					"transformations": [
+						{
+							"name": "totalizarMedidas",
+							"description": "Totalización por Order Date en formato numérico"
+						},
+						{
+							"name": "ordenarAAAAMM",
+							"description": "Se ordena el Order Date pero en formato numérico YYYYMM"
+						},
+						{
+							"name": "inclusionFechaNumerica",
+							"description": "Cambio a formato numérico de \"Order Date\""
+						}
+					],
+					"script": "source(output(\n\t\tRegion as string,\n\t\tCountry as string,\n\t\t{Item Type} as string,\n\t\t{Sales Channel} as string,\n\t\t{Order Priority} as string,\n\t\t{Order Date} as date,\n\t\t{Order ID} as string,\n\t\t{Ship Date} as date,\n\t\t{Units Sold} as decimal(18,2),\n\t\t{Unit Price} as decimal(18,2),\n\t\t{Unit Cost} as decimal(18,2),\n\t\t{Total Revenue} as decimal(18,2),\n\t\t{Total Cost} as decimal(18,2),\n\t\t{Total Profit} as decimal(18,2)\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> datosVentas\nordenarAAAAMM aggregate(groupBy({Order Date} = inclusionFechaNumerica@{Order Date}),\n\t{Units Sold} = sum({Units Sold}),\n\t\t{Unit Price} = avg({Unit Price}),\n\t\t{Unit Cost} = avg({Unit Cost}),\n\t\t{Total Revenue} = avg({Total Revenue}),\n\t\t{Total Cost} = avg({Total Cost}),\n\t\t{Total Profit} = avg({Total Profit}),\n\tpartitionBy('hash', 1)) ~> totalizarMedidas\ninclusionFechaNumerica sort(asc({Order Date}, true),\n\tcaseInsensitive: true,\n\tpartitionLevel: true) ~> ordenarAAAAMM\ndatosVentas derive({Order Date} = toInteger(toString({Order Date},'YYYYMM'))) ~> inclusionFechaNumerica\ntotalizarMedidas sink(input(\n\t\tANNOMES as integer,\n\t\t{Units Sold} as decimal(28,2),\n\t\t{Unit Price} as decimal(22,6),\n\t\t{Unit Cost} as decimal(22,6),\n\t\t{Total Revenue} as decimal(22,6),\n\t\t{Total Cost} as decimal(22,6),\n\t\t{Total Profit} as decimal(22,6)\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\ttruncate:true,\n\tformat: 'table',\n\tmapColumn(\n\t\tANNOMES = {Order Date},\n\t\t{Units Sold},\n\t\t{Unit Price},\n\t\t{Unit Cost},\n\t\t{Total Revenue},\n\t\t{Total Cost},\n\t\t{Total Profit}\n\t),\n\tpartitionBy('hash', 1),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> datosVentasMensuales"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/datosVentas')]",
+				"[concat(variables('factoryId'), '/datasets/datosVentasMensuales')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_TransformMovies')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Ejemplos Películas"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_moviesDB",
+								"type": "DatasetReference"
+							},
+							"name": "MoviesDB",
+							"description": "Fichero origen de películas"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "sink_MoviesDB",
+								"type": "DatasetReference"
+							},
+							"name": "MovieSink"
+						}
+					],
+					"transformations": [
+						{
+							"name": "FilterYears",
+							"description": "Filtrado de años"
+						},
+						{
+							"name": "AggregateComedyRatings",
+							"description": "Agregación de ratings por año"
+						},
+						{
+							"name": "OrdenarAnos",
+							"description": "Ordenación en base al año numérico"
+						},
+						{
+							"name": "LeerPeliculas",
+							"description": "Leemos nuevamente las películas para enlazar al set de datos completo."
+						},
+						{
+							"name": "EnlacePeliculas",
+							"description": "Self-join para tener todas las columnas"
+						},
+						{
+							"name": "SelColumnas",
+							"description": "Se elimina una de las columnas año"
+						}
+					],
+					"script": "source(output(\n\t\tmovie as string,\n\t\ttitle as string,\n\t\tgenres as string,\n\t\tyear as string,\n\t\tRating as string,\n\t\t{Rotton Tomato} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> MoviesDB\nMoviesDB filter(toInteger(year) >= 1910 && toInteger(year) <= 2000 && rlike(genres, 'Comedy'),\n\tpartitionBy('hash', 1)) ~> FilterYears\nFilterYears aggregate(groupBy(year),\n\tAverageComedyRating = round(avg(toInteger(Rating)),3)) ~> AggregateComedyRatings\nSelColumnas sort(asc(toInteger(anno), true),\n\tcaseInsensitive: true,\n\tpartitionLevel: true) ~> OrdenarAnos\nMoviesDB select(mapColumn(\n\t\tmovie,\n\t\ttitle,\n\t\tgenres,\n\t\tyear_original = year,\n\t\tRating,\n\t\t{Rotton Tomato}\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> LeerPeliculas\nAggregateComedyRatings, LeerPeliculas join(year == year_original,\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> EnlacePeliculas\nEnlacePeliculas select(mapColumn(\n\t\tid_pelicula = movie,\n\t\ttitulo = title,\n\t\tanno = year_original,\n\t\tgenero = genres,\n\t\tRating,\n\t\tPromedioRatingAnual = AverageComedyRating,\n\t\t{Rotton Tomato}\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelColumnas\nOrdenarAnos sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['PeliculasOrdenadas_20200623.csv'],\n\tpartitionBy('hash', 1),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> MovieSink"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_moviesDB')]",
+				"[concat(variables('factoryId'), '/datasets/sink_MoviesDB')]"
+			]
+		}
+	]
+}

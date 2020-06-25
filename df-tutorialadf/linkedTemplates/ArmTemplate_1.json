@@ -100,10 +100,63 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/df_AgregarVentasMes')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "DF Para tomar los datos de ventas, agregarlos e insertarlos ordenados por ANNOMES que es el Order Date",
+				"folder": {
+					"name": "Ejemplos Ventas"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "datosVentas",
+								"type": "DatasetReference"
+							},
+							"name": "datosVentas",
+							"description": "Origen con 1,5 millones de registros de Ventas"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "datosVentasMensuales",
+								"type": "DatasetReference"
+							},
+							"name": "datosVentasMensuales",
+							"description": "Target de Ventas Mensuales por Order Date"
+						}
+					],
+					"transformations": [
+						{
+							"name": "totalizarMedidas",
+							"description": "Totalización por Order Date en formato numérico"
+						},
+						{
+							"name": "ordenarAAAAMM",
+							"description": "Se ordena el Order Date pero en formato numérico YYYYMM"
+						},
+						{
+							"name": "inclusionFechaNumerica",
+							"description": "Cambio a formato numérico de \"Order Date\""
+						}
+					],
+					"script": "source(output(\n\t\tRegion as string,\n\t\tCountry as string,\n\t\t{Item Type} as string,\n\t\t{Sales Channel} as string,\n\t\t{Order Priority} as string,\n\t\t{Order Date} as date,\n\t\t{Order ID} as string,\n\t\t{Ship Date} as date,\n\t\t{Units Sold} as decimal(18,2),\n\t\t{Unit Price} as decimal(18,2),\n\t\t{Unit Cost} as decimal(18,2),\n\t\t{Total Revenue} as decimal(18,2),\n\t\t{Total Cost} as decimal(18,2),\n\t\t{Total Profit} as decimal(18,2)\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> datosVentas\nordenarAAAAMM aggregate(groupBy({Order Date} = inclusionFechaNumerica@{Order Date}),\n\t{Units Sold} = sum({Units Sold}),\n\t\t{Unit Price} = avg({Unit Price}),\n\t\t{Unit Cost} = avg({Unit Cost}),\n\t\t{Total Revenue} = avg({Total Revenue}),\n\t\t{Total Cost} = avg({Total Cost}),\n\t\t{Total Profit} = avg({Total Profit}),\n\tpartitionBy('hash', 1)) ~> totalizarMedidas\ninclusionFechaNumerica sort(asc({Order Date}, true),\n\tcaseInsensitive: true,\n\tpartitionLevel: true) ~> ordenarAAAAMM\ndatosVentas derive({Order Date} = toInteger(toString({Order Date},'YYYYMM'))) ~> inclusionFechaNumerica\ntotalizarMedidas sink(input(\n\t\tANNOMES as integer,\n\t\t{Units Sold} as decimal(28,2),\n\t\t{Unit Price} as decimal(22,6),\n\t\t{Unit Cost} as decimal(22,6),\n\t\t{Total Revenue} as decimal(22,6),\n\t\t{Total Cost} as decimal(22,6),\n\t\t{Total Profit} as decimal(22,6)\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\ttruncate:true,\n\tformat: 'table',\n\tmapColumn(\n\t\tANNOMES = {Order Date},\n\t\t{Units Sold},\n\t\t{Unit Price},\n\t\t{Unit Cost},\n\t\t{Total Revenue},\n\t\t{Total Cost},\n\t\t{Total Profit}\n\t),\n\tpartitionBy('hash', 1),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> datosVentasMensuales"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/df_TransformMovies')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
+				"folder": {
+					"name": "Ejemplos Películas"
+				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
 					"sources": [
@@ -152,44 +205,6 @@
 						}
 					],
 					"script": "source(output(\n\t\tmovie as string,\n\t\ttitle as string,\n\t\tgenres as string,\n\t\tyear as string,\n\t\tRating as string,\n\t\t{Rotton Tomato} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> MoviesDB\nMoviesDB filter(toInteger(year) >= 1910 && toInteger(year) <= 2000 && rlike(genres, 'Comedy'),\n\tpartitionBy('hash', 1)) ~> FilterYears\nFilterYears aggregate(groupBy(year),\n\tAverageComedyRating = round(avg(toInteger(Rating)),3)) ~> AggregateComedyRatings\nSelColumnas sort(asc(toInteger(anno), true),\n\tcaseInsensitive: true,\n\tpartitionLevel: true) ~> OrdenarAnos\nMoviesDB select(mapColumn(\n\t\tmovie,\n\t\ttitle,\n\t\tgenres,\n\t\tyear_original = year,\n\t\tRating,\n\t\t{Rotton Tomato}\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> LeerPeliculas\nAggregateComedyRatings, LeerPeliculas join(year == year_original,\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> EnlacePeliculas\nEnlacePeliculas select(mapColumn(\n\t\tid_pelicula = movie,\n\t\ttitulo = title,\n\t\tanno = year_original,\n\t\tgenero = genres,\n\t\tRating,\n\t\tPromedioRatingAnual = AverageComedyRating,\n\t\t{Rotton Tomato}\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelColumnas\nOrdenarAnos sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['PeliculasOrdenadas_20200623.csv'],\n\tpartitionBy('hash', 1),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> MovieSink"
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "datosVentas",
-								"type": "DatasetReference"
-							},
-							"name": "source1"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "datosVentasMensuales",
-								"type": "DatasetReference"
-							},
-							"name": "sink1"
-						}
-					],
-					"transformations": [
-						{
-							"name": "Aggregate1"
-						},
-						{
-							"name": "Sort1"
-						}
-					],
-					"script": "source(output(\n\t\tRegion as string,\n\t\tCountry as string,\n\t\t{Item Type} as string,\n\t\t{Sales Channel} as string,\n\t\t{Order Priority} as string,\n\t\t{Order Date} as date,\n\t\t{Order ID} as string,\n\t\t{Ship Date} as date,\n\t\t{Units Sold} as decimal(18,2),\n\t\t{Unit Price} as decimal(18,2),\n\t\t{Unit Cost} as decimal(18,2),\n\t\t{Total Revenue} as decimal(18,2),\n\t\t{Total Cost} as decimal(18,2),\n\t\t{Total Profit} as decimal(18,2)\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> source1\nsource1 aggregate(groupBy(ANNOMES = toInteger(toString({Order Date}, 'YYYYMM'))),\n\t{Units Sold} = sum({Units Sold}),\n\t\t{Unit Price} = avg({Unit Price}),\n\t\t{Unit Cost} = avg({Unit Cost}),\n\t\t{Total Revenue} = avg({Total Revenue}),\n\t\t{Total Cost} = avg({Total Cost}),\n\t\t{Total Profit} = avg({Total Profit})) ~> Aggregate1\nAggregate1 sort(asc(ANNOMES, true),\n\tcaseInsensitive: true,\n\tpartitionLevel: true,\n\tpartitionBy('hash', 1)) ~> Sort1\nSort1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\ttruncate:true,\n\tformat: 'table',\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> sink1"
 				}
 			},
 			"dependsOn": []
@@ -406,6 +421,9 @@
 						}
 					}
 				],
+				"folder": {
+					"name": "Ejemplos Películas"
+				},
 				"annotations": []
 			},
 			"dependsOn": [
@@ -413,13 +431,14 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
+			"name": "[concat(parameters('factoryName'), '/pl_df_AgregarVentasMes')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "dataflow1",
+						"name": "df_AgregarVentasMes",
+						"description": "No he logrado hacer que los datos se ordenen al ser insertados en el Sink.",
 						"type": "ExecuteDataFlow",
 						"dependsOn": [],
 						"policy": {
@@ -432,12 +451,12 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataflow": {
-								"referenceName": "dataflow1",
+								"referenceName": "df_AgregarVentasMes",
 								"type": "DataFlowReference",
 								"parameters": {},
 								"datasetParameters": {
-									"source1": {},
-									"sink1": {}
+									"datosVentas": {},
+									"datosVentasMensuales": {}
 								}
 							},
 							"staging": {},
@@ -448,10 +467,13 @@
 						}
 					}
 				],
+				"folder": {
+					"name": "Ejemplos Ventas"
+				},
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/dataflow1')]"
+				"[concat(variables('factoryId'), '/dataflows/df_AgregarVentasMes')]"
 			]
 		}
 	]
