@@ -5,7 +5,14 @@
 			{
 				"name": "df_smallRadio",
 				"type": "ExecuteDataFlow",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "df_detalleRadio",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "7.00:00:00",
 					"retry": 0,
@@ -17,6 +24,30 @@
 				"typeProperties": {
 					"dataflow": {
 						"referenceName": "df_smallRadio",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					}
+				}
+			},
+			{
+				"name": "df_detalleRadio",
+				"description": "DF que carga el JSON sin ningún cambio.",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "df_detalleRadio",
 						"type": "DataFlowReference"
 					},
 					"compute": {
