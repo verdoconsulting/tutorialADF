@@ -307,7 +307,7 @@
 							"description": "Cambio a formato numérico de \"Order Date\""
 						}
 					],
-					"script": "source(output(\n\t\tRegion as string,\n\t\tCountry as string,\n\t\t{Item Type} as string,\n\t\t{Sales Channel} as string,\n\t\t{Order Priority} as string,\n\t\t{Order Date} as date,\n\t\t{Order ID} as string,\n\t\t{Ship Date} as date,\n\t\t{Units Sold} as decimal(18,2),\n\t\t{Unit Price} as decimal(18,2),\n\t\t{Unit Cost} as decimal(18,2),\n\t\t{Total Revenue} as decimal(18,2),\n\t\t{Total Cost} as decimal(18,2),\n\t\t{Total Profit} as decimal(18,2)\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> datosVentas\nordenarAAAAMM aggregate(groupBy({Order Date} = inclusionFechaNumerica@{Order Date}),\n\t{Units Sold} = sum({Units Sold}),\n\t\t{Unit Price} = avg({Unit Price}),\n\t\t{Unit Cost} = avg({Unit Cost}),\n\t\t{Total Revenue} = avg({Total Revenue}),\n\t\t{Total Cost} = avg({Total Cost}),\n\t\t{Total Profit} = avg({Total Profit}),\n\tpartitionBy('hash', 1)) ~> totalizarMedidas\ninclusionFechaNumerica sort(asc({Order Date}, true),\n\tcaseInsensitive: true,\n\tpartitionLevel: true) ~> ordenarAAAAMM\ndatosVentas derive({Order Date} = toInteger(toString({Order Date},'YYYYMM'))) ~> inclusionFechaNumerica\ntotalizarMedidas sink(input(\n\t\tANNOMES as integer,\n\t\t{Units Sold} as decimal(28,2),\n\t\t{Unit Price} as decimal(22,6),\n\t\t{Unit Cost} as decimal(22,6),\n\t\t{Total Revenue} as decimal(22,6),\n\t\t{Total Cost} as decimal(22,6),\n\t\t{Total Profit} as decimal(22,6)\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\ttruncate:true,\n\tformat: 'table',\n\tmapColumn(\n\t\tANNOMES = {Order Date},\n\t\t{Units Sold},\n\t\t{Unit Price},\n\t\t{Unit Cost},\n\t\t{Total Revenue},\n\t\t{Total Cost},\n\t\t{Total Profit}\n\t),\n\tpartitionBy('hash', 1),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> datosVentasMensuales"
+					"script": "source(output(\n\t\tRegion as string,\n\t\tCountry as string,\n\t\t{Item Type} as string,\n\t\t{Sales Channel} as string,\n\t\t{Order Priority} as string,\n\t\t{Order Date} as date,\n\t\t{Order ID} as string,\n\t\t{Ship Date} as date,\n\t\t{Units Sold} as decimal(18,2),\n\t\t{Unit Price} as decimal(18,2),\n\t\t{Unit Cost} as decimal(18,2),\n\t\t{Total Revenue} as decimal(18,2),\n\t\t{Total Cost} as decimal(18,2),\n\t\t{Total Profit} as decimal(18,2)\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> datosVentas\nordenarAAAAMM aggregate(groupBy(ANNOMES = {Order Date}),\n\t{Units Sold} = sum({Units Sold}),\n\t\t{Unit Price} = avg({Unit Price}),\n\t\t{Unit Cost} = avg({Unit Cost}),\n\t\t{Total Revenue} = avg({Total Revenue}),\n\t\t{Total Cost} = avg({Total Cost}),\n\t\t{Total Profit} = avg({Total Profit}),\n\tpartitionBy('hash', 1)) ~> totalizarMedidas\ninclusionFechaNumerica sort(asc({Order Date}, true),\n\tcaseInsensitive: true,\n\tpartitionLevel: true) ~> ordenarAAAAMM\ndatosVentas derive({Order Date} = toInteger(toString({Order Date},'YYYYMM'))) ~> inclusionFechaNumerica\ntotalizarMedidas sink(input(\n\t\tANNOMES as integer,\n\t\t{Units Sold} as decimal(28,2),\n\t\t{Unit Price} as decimal(22,6),\n\t\t{Unit Cost} as decimal(22,6),\n\t\t{Total Revenue} as decimal(22,6),\n\t\t{Total Cost} as decimal(22,6),\n\t\t{Total Profit} as decimal(22,6)\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\ttruncate:true,\n\tformat: 'table',\n\tmapColumn(\n\t\tANNOMES,\n\t\t{Units Sold},\n\t\t{Unit Price},\n\t\t{Unit Cost},\n\t\t{Total Revenue},\n\t\t{Total Cost},\n\t\t{Total Profit}\n\t),\n\tpartitionBy('hash', 1),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> datosVentasMensuales"
 				}
 			},
 			"dependsOn": []
@@ -429,6 +429,40 @@
 						}
 					],
 					"script": "source(output(\n\t\tts as string,\n\t\tuserId as string,\n\t\tsessionId as string,\n\t\tpage as string,\n\t\tauth as string,\n\t\tmethod as string,\n\t\tstatus as string,\n\t\tlevel as string,\n\t\titemInSession as string,\n\t\tlocation as string,\n\t\tlastName as string,\n\t\tfirstName as string,\n\t\tregistration as string,\n\t\tgender as string,\n\t\tartist as string,\n\t\tsong as string,\n\t\tlength as double\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> smallRadio\nsmallRadio select(mapColumn(\n\t\ttime_stamp = ts,\n\t\tpage,\n\t\tmethod,\n\t\tstatus,\n\t\tlevel_type = level,\n\t\tlocation,\n\t\tlastName,\n\t\tfirstName,\n\t\tregistration,\n\t\tgender\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> seleccionarColumnas\nseleccionarColumnas aggregate(groupBy(location),\n\tSubscribersByLocation = count(),\n\t\ttime_stamp = first(time_stamp)) ~> SubscribersByLocation\nseleccionarColumnas aggregate(groupBy(gender,\n\t\tlevel_type),\n\tcountOfSubTypeByGender = count(),\n\t\ttime_stamp = first(time_stamp)) ~> countOfSubTypeByGender\nseleccionarColumnas select(mapColumn(\n\t\ttime_stamp,\n\t\tpage,\n\t\tmethod,\n\t\tstatus,\n\t\tlevel_type,\n\t\tlocation,\n\t\tlastName,\n\t\tfirstName,\n\t\tregistration,\n\t\tgender\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> datosOriginales\ndatosOriginales, SubscribersByLocation join(datosOriginales@time_stamp == SubscribersByLocation@time_stamp,\n\tjoinType:'left',\n\tbroadcast: 'auto')~> subscribersByLocDatosOri\nsubscribersByLocDatosOri, countOfSubTypeByGender join(datosOriginales@time_stamp == countOfSubTypeByGender@time_stamp,\n\tjoinType:'left',\n\tbroadcast: 'auto')~> countOfSubTypeByGenderDatosOri\ncountOfSubTypeByGenderDatosOri select(mapColumn(\n\t\ttime_stamp = datosOriginales@time_stamp,\n\t\tstatus,\n\t\tlevel_type = datosOriginales@level_type,\n\t\tlocation = datosOriginales@location,\n\t\tlastName,\n\t\tfirstName,\n\t\tregistration,\n\t\tgender = datosOriginales@gender,\n\t\tlocation = SubscribersByLocation@location,\n\t\tSubscribersByLocation,\n\t\ttime_stamp = SubscribersByLocation@time_stamp,\n\t\tgender = countOfSubTypeByGender@gender,\n\t\tlevel_type = countOfSubTypeByGender@level_type,\n\t\tcountOfSubTypeByGender,\n\t\ttime_stamp = countOfSubTypeByGender@time_stamp\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> LimpiarColumnas\nLimpiarColumnas derive(nombre_completo = firstName + ' ' + lastName,\n\t\testado = split(location, ',')[2]) ~> columnasAdicionales\ncolumnasAdicionales sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\trecreate:true,\n\tformat: 'table',\n\tmapColumn(\n\t\ttime_stamp,\n\t\tnombre_completo,\n\t\tstatus,\n\t\tlevel_type,\n\t\tlocation,\n\t\tregistration,\n\t\tgender,\n\t\testado,\n\t\tSubscribersByLocation,\n\t\tcountOfSubTypeByGender\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> datosRadios"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_detalleRadio')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Ejemplos Radio"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "smRadio",
+								"type": "DatasetReference"
+							},
+							"name": "smallRadio"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ds_detalleRadio",
+								"type": "DatasetReference"
+							},
+							"name": "datosDetallados"
+						}
+					],
+					"transformations": [],
+					"script": "source(output(\n\t\tts as string,\n\t\tuserId as string,\n\t\tsessionId as string,\n\t\tpage as string,\n\t\tauth as string,\n\t\tmethod as string,\n\t\tstatus as string,\n\t\tlevel as string,\n\t\titemInSession as string,\n\t\tlocation as string,\n\t\tlastName as string,\n\t\tfirstName as string,\n\t\tregistration as string,\n\t\tgender as string,\n\t\tartist as string,\n\t\tsong as string,\n\t\tlength as double\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> smallRadio\nsmallRadio sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\trecreate:true,\n\tformat: 'table',\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> datosDetallados"
 				}
 			},
 			"dependsOn": []
@@ -713,7 +747,14 @@
 					{
 						"name": "df_smallRadio",
 						"type": "ExecuteDataFlow",
-						"dependsOn": [],
+						"dependsOn": [
+							{
+								"activity": "df_detalleRadio",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"timeout": "7.00:00:00",
 							"retry": 0,
@@ -738,6 +779,36 @@
 								"computeType": "General"
 							}
 						}
+					},
+					{
+						"name": "df_detalleRadio",
+						"description": "DF que carga el JSON sin ningún cambio.",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_detalleRadio",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"smallRadio": {},
+									"datosDetallados": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
 					}
 				],
 				"folder": {
@@ -746,7 +817,8 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/df_smallRadio')]"
+				"[concat(variables('factoryId'), '/dataflows/df_smallRadio')]",
+				"[concat(variables('factoryId'), '/dataflows/df_detalleRadio')]"
 			]
 		}
 	]

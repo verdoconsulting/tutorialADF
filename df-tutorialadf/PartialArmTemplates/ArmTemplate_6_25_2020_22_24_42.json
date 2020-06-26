@@ -1,0 +1,170 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "df-tutorialadf"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_df_Radio')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "df_smallRadio",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "df_detalleRadio",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_smallRadio",
+								"type": "DataFlowReference"
+							},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "df_detalleRadio",
+						"description": "DF que carga el JSON sin ningún cambio.",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_detalleRadio",
+								"type": "DataFlowReference"
+							},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					}
+				],
+				"folder": {
+					"name": "Ejemplos Radio"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/df_detalleRadio')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_AgregarVentasMes')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "DF Para tomar los datos de ventas, agregarlos e insertarlos ordenados por ANNOMES que es el Order Date",
+				"folder": {
+					"name": "Ejemplos Ventas"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "datosVentas",
+								"type": "DatasetReference"
+							},
+							"name": "datosVentas",
+							"description": "Origen con 1,5 millones de registros de Ventas"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "datosVentasMensuales",
+								"type": "DatasetReference"
+							},
+							"name": "datosVentasMensuales",
+							"description": "Target de Ventas Mensuales por Order Date"
+						}
+					],
+					"transformations": [
+						{
+							"name": "totalizarMedidas",
+							"description": "Totalización por Order Date en formato numérico"
+						},
+						{
+							"name": "ordenarAAAAMM",
+							"description": "Se ordena el Order Date pero en formato numérico YYYYMM"
+						},
+						{
+							"name": "inclusionFechaNumerica",
+							"description": "Cambio a formato numérico de \"Order Date\""
+						}
+					],
+					"script": "source(output(\n\t\tRegion as string,\n\t\tCountry as string,\n\t\t{Item Type} as string,\n\t\t{Sales Channel} as string,\n\t\t{Order Priority} as string,\n\t\t{Order Date} as date,\n\t\t{Order ID} as string,\n\t\t{Ship Date} as date,\n\t\t{Units Sold} as decimal(18,2),\n\t\t{Unit Price} as decimal(18,2),\n\t\t{Unit Cost} as decimal(18,2),\n\t\t{Total Revenue} as decimal(18,2),\n\t\t{Total Cost} as decimal(18,2),\n\t\t{Total Profit} as decimal(18,2)\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> datosVentas\nordenarAAAAMM aggregate(groupBy(ANNOMES = {Order Date}),\n\t{Units Sold} = sum({Units Sold}),\n\t\t{Unit Price} = avg({Unit Price}),\n\t\t{Unit Cost} = avg({Unit Cost}),\n\t\t{Total Revenue} = avg({Total Revenue}),\n\t\t{Total Cost} = avg({Total Cost}),\n\t\t{Total Profit} = avg({Total Profit}),\n\tpartitionBy('hash', 1)) ~> totalizarMedidas\ninclusionFechaNumerica sort(asc({Order Date}, true),\n\tcaseInsensitive: true,\n\tpartitionLevel: true) ~> ordenarAAAAMM\ndatosVentas derive({Order Date} = toInteger(toString({Order Date},'YYYYMM'))) ~> inclusionFechaNumerica\ntotalizarMedidas sink(input(\n\t\tANNOMES as integer,\n\t\t{Units Sold} as decimal(28,2),\n\t\t{Unit Price} as decimal(22,6),\n\t\t{Unit Cost} as decimal(22,6),\n\t\t{Total Revenue} as decimal(22,6),\n\t\t{Total Cost} as decimal(22,6),\n\t\t{Total Profit} as decimal(22,6)\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\ttruncate:true,\n\tformat: 'table',\n\tmapColumn(\n\t\tANNOMES,\n\t\t{Units Sold},\n\t\t{Unit Price},\n\t\t{Unit Cost},\n\t\t{Total Revenue},\n\t\t{Total Cost},\n\t\t{Total Profit}\n\t),\n\tpartitionBy('hash', 1),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> datosVentasMensuales"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_detalleRadio')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Ejemplos Radio"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "smRadio",
+								"type": "DatasetReference"
+							},
+							"name": "smallRadio"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ds_detalleRadio",
+								"type": "DatasetReference"
+							},
+							"name": "datosDetallados"
+						}
+					],
+					"transformations": [],
+					"script": "source(output(\n\t\tts as string,\n\t\tuserId as string,\n\t\tsessionId as string,\n\t\tpage as string,\n\t\tauth as string,\n\t\tmethod as string,\n\t\tstatus as string,\n\t\tlevel as string,\n\t\titemInSession as string,\n\t\tlocation as string,\n\t\tlastName as string,\n\t\tfirstName as string,\n\t\tregistration as string,\n\t\tgender as string,\n\t\tartist as string,\n\t\tsong as string,\n\t\tlength as double\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> smallRadio\nsmallRadio sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\trecreate:true,\n\tformat: 'table',\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> datosDetallados"
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}

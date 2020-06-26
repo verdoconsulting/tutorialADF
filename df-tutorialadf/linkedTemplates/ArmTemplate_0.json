@@ -598,6 +598,54 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/ds_datosRadio')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "db_Tutoriales",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Ejemplos Radio"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "datosRadio"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/db_Tutoriales')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_detalleRadio')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "db_Tutoriales",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Ejemplos Radio"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "detalleRadio"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/db_Tutoriales')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ds_moviesDB')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -795,54 +843,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/ls_ADSL')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_datosRadio')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "db_Tutoriales",
-					"type": "LinkedServiceReference"
-				},
-				"folder": {
-					"name": "Ejemplos Radio"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": "dbo",
-					"table": "datosRadio"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/db_Tutoriales')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_detalleRadio')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "db_Tutoriales",
-					"type": "LinkedServiceReference"
-				},
-				"folder": {
-					"name": "Ejemplos Radio"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": "dbo",
-					"table": "detalleRadio"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/db_Tutoriales')]"
 			]
 		},
 		{
